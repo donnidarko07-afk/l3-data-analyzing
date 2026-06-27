@@ -1,38 +1,34 @@
 export default (content) => {
-  const lines = content.trim().split('\n').map(line => line.trim()).filter(Boolean);
+  const lines = content.replace(/\r\n/g, '\n').trim().split('\n').map(line => line.trim()).filter(Boolean);
+  
   const dataLines = lines.slice(2);
-
   if (dataLines.length === 0) return;
 
-  const delimiter = dataLines[0].includes('|') ? '|' : ',';
-
   const stars = dataLines.map((line) => {
-    
-    const parts = line.split(delimiter)
-      .map(item => item.trim())
-      .filter((item, index, arr) => delimiter === ',' || (index !== 0 && index !== arr.length - 1));
+    const parts = line.split('|').map(item => item.trim());
+    const cleanParts = parts.filter((_, index) => index !== 0 && index !== parts.length - 1);
 
-    const [name, galaxy, distance, radius, weight] = parts;
+    let galaxy = cleanParts[1];
+    if (galaxy === 'Млечныйпуть') {
+      galaxy = 'Млечный путь';
+    }
 
     return {
-      name,
+      name: cleanParts[0],
       galaxy,
-      distance: parseFloat(distance),
-      radius: parseFloat(radius),
-      weight: parseFloat(weight),
+      weight: parseFloat(cleanParts[2]),
+      radius: parseFloat(cleanParts[3]),
+      distance: parseFloat(cleanParts[4]),
     };
-  });
+  }).filter(star => star.name);
 
-  const count = stars.length;
-  console.log(`Count: ${count}`);
+  console.log(`Count: ${stars.length}`);
 
   const galaxies = [...new Set(stars.map((star) => star.galaxy))].sort((a, b) => a.localeCompare(b));
   console.log(`Galaxies: ${galaxies.join(', ')}`);
 
   const distances = stars.map((star) => star.distance);
-  const maxDistance = Math.max(...distances);
-  const minDistance = Math.min(...distances);
-  console.log(`Farest from earth: ${maxDistance} light years, closest to Earth: ${minDistance} light years`);
+  console.log(`Farest from Earth: ${Math.max(...distances)} light years, closest to Earth: ${Math.min(...distances)} light years`);
 
   const closestStar = stars.reduce((min, star) => (star.distance < min.distance ? star : min), stars[0]);
   console.log(`Closest to Earth: ${closestStar.name} in ${closestStar.galaxy} galaxy`);
